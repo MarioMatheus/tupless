@@ -55,8 +55,8 @@ public class InfoDialog extends Dialog {
 		shell.setText(title);
 		shell.setLayout(new FillLayout(SWT.HORIZONTAL));
 
-		List list = new List(shell, SWT.BORDER);
-		list.setFont(SWTResourceManager.getFont("Fira Code", 16, SWT.NORMAL));
+		List list = new List(shell, SWT.BORDER | SWT.V_SCROLL);
+		list.setFont(SWTResourceManager.getFont("Fira Code", 14, SWT.NORMAL));
 
 		for (String element : content) {
 			list.add(element);

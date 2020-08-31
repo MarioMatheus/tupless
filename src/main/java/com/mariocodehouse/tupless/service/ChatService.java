@@ -22,7 +22,7 @@ public class ChatService {
 	private static long COLLECTOR_TIMEOUT = 1 * 60 * 1000;
 
 	private SpaceService space;
-	private InterruptableThread chatListen;
+	private Thread chatListen;
 
 	@Getter
 	@Setter
@@ -40,11 +40,21 @@ public class ChatService {
 		}
 	}
 
-	public void registerUser(String name) {
+	public Boolean registerUser(String name) {
 		// Checa se usuario já existe
 		if (!userAlreadyExists(name)) {
 			// Adiciona Usuario no Sistema com Sala nula
 			space.write(new UserEntry(name, null), Lease.FOREVER);
+			return true;
+		}
+		return false;
+	}
+
+	public void unregisterCurrentUser() {
+		String name = getCurrentUser();
+		if (name != null && userAlreadyExists(name)) {
+			UserEntry user = (UserEntry) space.take(USER_TEMPLATE(name), TAKE_TIMEOUT);
+			removeRoomUser(user);
 		}
 	}
 
@@ -71,11 +81,7 @@ public class ChatService {
 
 		// Checar se o usuario esta em outra sala e se estiver remover
 		UserEntry user = (UserEntry) space.take(USER_TEMPLATE(userName), TAKE_TIMEOUT);
-		if (user.registeredRoom != null) {
-			RoomEntry oldRoom = (RoomEntry) space.take(ROOM_TEMPLATE(user.registeredRoom), TAKE_TIMEOUT);
-			oldRoom.removeUser(user.name);
-			space.write(oldRoom, oldRoom.users.isEmpty() ? EMPTY_ROOM_TIMEOUT : Lease.FOREVER);
-		}
+		removeRoomUser(user);
 
 		// Adicionar usuario na outra sala
 		RoomEntry room = (RoomEntry) space.take(ROOM_TEMPLATE(roomName), TAKE_TIMEOUT);
@@ -85,6 +91,14 @@ public class ChatService {
 		// Salva alteracoes do usuario
 		user.registeredRoom = roomName;
 		space.write(user, Lease.FOREVER);
+	}
+
+	private void removeRoomUser(UserEntry user) {
+		if (user.registeredRoom != null) {
+			RoomEntry oldRoom = (RoomEntry) space.take(ROOM_TEMPLATE(user.registeredRoom), TAKE_TIMEOUT);
+			oldRoom.removeUser(user.name);
+			space.write(oldRoom, oldRoom.users.isEmpty() ? EMPTY_ROOM_TIMEOUT : Lease.FOREVER);
+		}
 	}
 
 	public void sendMessage(String content, String receiver, String target) {
@@ -101,13 +115,10 @@ public class ChatService {
 	}
 
 	public void startListenChat(final ChatListener listener) {
-		if (chatListen != null) {
-			chatListen.interrupt();
-		}
-		chatListen = new InterruptableThread(new Runnable() {
+		chatListen = new Thread(new Runnable() {
 			public void run() {
 				while (true) {
-					System.out.println("Aguardando Mensagem");
+					System.out.println("Escutando msgs para o " + getCurrentUser());
 					MessageEntry message = (MessageEntry) space.take(MESSAGE_TEMPLATE(getCurrentUser()), Lease.FOREVER);
 					listener.messageReceiver(message.sender, message.content, message.target);
 				}
@@ -160,6 +171,7 @@ public class ChatService {
 	 */
 	private void startRoomGarbageCollector() {
 		new Thread(new Runnable() {
+
 			public void run() {
 				while (true) {
 					try {
@@ -182,6 +194,7 @@ public class ChatService {
 					}
 				}
 			}
+
 		}).start();
 	}
 

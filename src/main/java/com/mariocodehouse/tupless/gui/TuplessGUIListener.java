@@ -2,7 +2,7 @@ package com.mariocodehouse.tupless.gui;
 
 public interface TuplessGUIListener {
 
-	void onCreateUserInput(String name);
+	Boolean onCreateUserInput(String name);
 
 	void onCreateRoomInput(String name);
 

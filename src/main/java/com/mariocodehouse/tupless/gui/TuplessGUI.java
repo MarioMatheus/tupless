@@ -66,6 +66,8 @@ public class TuplessGUI {
 
 	public void addMessageToMainList(String message) {
 		list.add(message);
+		list.select(list.getItemCount() - 1);
+		list.showSelection();
 	}
 
 	public void cleanMessageList() {
@@ -85,7 +87,7 @@ public class TuplessGUI {
 	 */
 	protected void createContents() {
 		shell = new Shell(SWT.TITLE | SWT.MODELESS);
-		shell.setSize(450, 300);
+		shell.setSize(300, 500);
 		shell.setLocation(200, 200);
 		shell.setText("Tupless Chat");
 		shell.setLayout(new GridLayout(1, false));
@@ -94,14 +96,19 @@ public class TuplessGUI {
 		composite.setBackground(SWTResourceManager.getColor(SWT.COLOR_LIST_FOREGROUND));
 		composite.setLayout(new FillLayout(SWT.HORIZONTAL));
 		GridData gd_composite = new GridData(SWT.FILL, SWT.CENTER, false, false, 1, 1);
-		gd_composite.heightHint = 232;
+		gd_composite.heightHint = 435;
 		composite.setLayoutData(gd_composite);
 
-		list = new List(composite, SWT.BORDER);
-		list.setFont(SWTResourceManager.getFont("Fira Code", 16, SWT.NORMAL));
+		list = new List(composite, SWT.BORDER | SWT.V_SCROLL);
+		list.setFont(SWTResourceManager.getFont("Fira Code", 14, SWT.NORMAL));
+		list.addListener(SWT.MeasureItem, new Listener() {
+			public void handleEvent(Event arg0) {
+				System.out.println(arg0);
+			}
+		});
 
 		txtDigiteSuaMensagem = new Text(shell, SWT.BORDER);
-		txtDigiteSuaMensagem.setFont(SWTResourceManager.getFont("Fira Code", 16, SWT.NORMAL));
+		txtDigiteSuaMensagem.setFont(SWTResourceManager.getFont("Fira Code", 14, SWT.NORMAL));
 		txtDigiteSuaMensagem.setText("Digite sua mensagem");
 		txtDigiteSuaMensagem.addKeyListener(new KeyAdapter() {
 			@Override
@@ -110,7 +117,7 @@ public class TuplessGUI {
 				if (e.keyCode == SWT.CR && !msg.isEmpty()) {
 					if (tuplessListener != null)
 						tuplessListener.onMessageType(msg);
-					list.add("Eu: " + msg);
+					addMessageToMainList("Eu: " + msg);
 					txtDigiteSuaMensagem.setText("");
 				}
 			}
@@ -121,17 +128,26 @@ public class TuplessGUI {
 	}
 
 	protected void openInitialDialog() {
-		String name = openInputDialog("Apelido Tupless");
-		GUIState.getInstance().setUserName(name);
-		if (tuplessListener != null)
-			tuplessListener.onCreateUserInput(name);
+		openInitialDialog("Apelido Tupless");
+	}
 
+	protected void openInitialDialog(String title) {
+		String name = openInputDialog(title);
+		GUIState.getInstance().setUserName(name);
+		if (!shell.isDisposed() && tuplessListener != null) {
+			Boolean isSuccess = tuplessListener.onCreateUserInput(name);
+			if (!isSuccess) {
+				openInitialDialog("Apelido já em uso");
+			}
+		}
 	}
 
 	private String openInputDialog(String title) {
 		shell.setEnabled(false);
 		String name = (String) new InputDialog(title, shell, SWT.TITLE).open();
-		shell.setEnabled(true);
+		if (!shell.isDisposed()) {
+			shell.setEnabled(true);
+		}
 		return name;
 	}
 
@@ -147,7 +163,7 @@ public class TuplessGUI {
 		createRoomItem.setText("Criar Sala");
 		createRoomItem.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event e) {
-				String name = openInputDialog("Criar::Nome da sala");
+				String name = openInputDialog("Nome da sala");
 				if (tuplessListener != null)
 					tuplessListener.onCreateRoomInput(name);
 			}
@@ -163,10 +179,10 @@ public class TuplessGUI {
 		});
 
 		MenuItem joinChatItem = new MenuItem(roomsMenu, SWT.NONE);
-		joinChatItem.setText("Conversar");
+		joinChatItem.setText("Juntar-se");
 		joinChatItem.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event e) {
-				String name = openInputDialog("Conversar com um grupo");
+				String name = openInputDialog("Conversar em uma sala");
 				GUIState.getInstance().setCurrentReceiver(name);
 				GUIState.getInstance().setCurrentTarget("room");
 				if (tuplessListener != null)
@@ -202,5 +218,9 @@ public class TuplessGUI {
 		});
 
 		shell.setMenuBar(menuBar);
+	}
+
+	public void setTitle(String title) {
+		shell.setText(title);
 	}
 }

@@ -20,22 +20,32 @@ public class App {
 
 		window.setListener(new TuplessGUIListener() {
 
-			public void onCreateUserInput(String name) {
-				chatService.registerUser(name);
-				chatService.setCurrentUser(name);
-				chatService.startListenChat(new ChatListener() {
-					public void messageReceiver(final String sender, final String message, final String target) {
-						window.runAsync(new Runnable() {
-							public void run() {
-								String contentMessage = sender + ": " + message;
-								if (!target.contentEquals(GUIState.getInstance().getCurrentTarget())) {
-									contentMessage = target + " - " + contentMessage;
-								}
-								window.addMessageToMainList(contentMessage);
-							}
-						});
+			private void updateWindowList(final String sender, final String message, final String target) {
+				window.runAsync(new Runnable() {
+					public void run() {
+						String contentMessage = sender + ": " + message;
+						String currentTarget = GUIState.getInstance().getCurrentTarget();
+						if (currentTarget != null && !target.contentEquals(currentTarget)) {
+							contentMessage = target + " - " + contentMessage;
+						}
+						window.addMessageToMainList(contentMessage);
 					}
 				});
+			}
+
+			public Boolean onCreateUserInput(String name) {
+				Boolean isSuccess = chatService.registerUser(name);
+				if (!isSuccess) {
+					return false;
+				}
+				window.setTitle("Conversas do " + name);
+				chatService.setCurrentUser(name);
+				chatService.startListenChat(new ChatListener() {
+					public void messageReceiver(String sender, String message, String target) {
+						updateWindowList(sender, message, target);
+					}
+				});
+				return true;
 			}
 
 			public void onCreateRoomInput(String name) {
@@ -60,6 +70,9 @@ public class App {
 			public void onMessageType(String message) {
 				String receiver = GUIState.getInstance().getCurrentReceiver();
 				String target = GUIState.getInstance().getCurrentTarget();
+				if (receiver == null || target == null) {
+					return;
+				}
 				chatService.sendMessage(message, receiver, target);
 			}
 
@@ -67,7 +80,7 @@ public class App {
 				window.runAsync(new Runnable() {
 					public void run() {
 						Set<String> rooms = chatService.listRegisteredRooms();
-						window.openInfoDialog("Grupos Disponíveis", new ArrayList<String>(rooms));
+						window.openInfoDialog("Salas Disponíveis", new ArrayList<String>(rooms));
 					}
 				});
 			}
@@ -76,7 +89,7 @@ public class App {
 				window.runAsync(new Runnable() {
 					public void run() {
 						Set<String> rooms = chatService.listRegisteredUsersInRoom(roomName);
-						window.openInfoDialog("Usuários do grupo " + roomName, new ArrayList<String>(rooms));
+						window.openInfoDialog("Usuários na sala " + roomName, new ArrayList<String>(rooms));
 					}
 				});
 			}
@@ -84,6 +97,8 @@ public class App {
 		});
 
 		window.open();
+
+		chatService.unregisterCurrentUser();
 		System.out.println("Goodbye Tupless!");
 		System.exit(0);
 	}

@@ -61,7 +61,7 @@ public class InputDialog extends Dialog {
 
 		txtDigiteSeuNome = new Text(shlNomeNoTupless, SWT.BORDER);
 		txtDigiteSeuNome.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-		txtDigiteSeuNome.setFont(SWTResourceManager.getFont("Fira Code", 16, SWT.NORMAL));
+		txtDigiteSeuNome.setFont(SWTResourceManager.getFont("Fira Code", 14, SWT.NORMAL));
 
 		Button btnOk = new Button(shlNomeNoTupless, SWT.NONE);
 		btnOk.addMouseListener(new MouseAdapter() {
