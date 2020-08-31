@@ -3,5 +3,5 @@ Trabalho da disciplina de programação paralela e distríbuida
 Exercício de Espaço de Tuplas com JavaSpaces
 
 ## Tecnologias:
-- App: Java com Interface SWT
-- MOM: Apache River
+- Application: Java com Interface SWT
+- Tuple Space: Apache River
