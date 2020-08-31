@@ -13,6 +13,8 @@ public class GUIState {
 
 	private GUIState() {
 		userName = null;
+		currentReceiver = null;
+		currentTarget = null;
 	}
 
 	public static GUIState getInstance() {

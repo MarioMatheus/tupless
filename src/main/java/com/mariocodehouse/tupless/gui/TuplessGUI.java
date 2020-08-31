@@ -183,10 +183,10 @@ public class TuplessGUI {
 		joinChatItem.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event e) {
 				String name = openInputDialog("Conversar em uma sala");
-				GUIState.getInstance().setCurrentReceiver(name);
-				GUIState.getInstance().setCurrentTarget("room");
-				if (tuplessListener != null)
-					tuplessListener.onJoinRoom(name);
+				if (tuplessListener != null && tuplessListener.onJoinRoom(name)) {
+					GUIState.getInstance().setCurrentReceiver(name);
+					GUIState.getInstance().setCurrentTarget("room");
+				}
 			}
 		});
 

@@ -6,7 +6,7 @@ public interface TuplessGUIListener {
 
 	void onCreateRoomInput(String name);
 
-	void onJoinRoom(String roomName);
+	Boolean onJoinRoom(String roomName);
 
 	void onListAllRooms();
 

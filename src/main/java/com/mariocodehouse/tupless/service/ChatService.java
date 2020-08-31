@@ -70,13 +70,13 @@ public class ChatService {
 		}
 	}
 
-	public void registerUserInRoom(String roomName) {
+	public Boolean registerUserInRoom(String roomName) {
 		// Checar se o usuario existe
 		// Checar se a sala a ser adicionado existe
 		String userName = getCurrentUser();
 
 		if (!userAlreadyExists(userName) || !roomAlreadyExists(roomName)) {
-			return;
+			return false;
 		}
 
 		// Checar se o usuario esta em outra sala e se estiver remover
@@ -91,6 +91,7 @@ public class ChatService {
 		// Salva alteracoes do usuario
 		user.registeredRoom = roomName;
 		space.write(user, Lease.FOREVER);
+		return true;
 	}
 
 	private void removeRoomUser(UserEntry user) {
@@ -115,10 +116,11 @@ public class ChatService {
 	}
 
 	public void startListenChat(final ChatListener listener) {
+		final String user = getCurrentUser();
 		chatListen = new Thread(new Runnable() {
 			public void run() {
 				while (true) {
-					MessageEntry message = (MessageEntry) space.take(MESSAGE_TEMPLATE(getCurrentUser()), Lease.FOREVER);
+					MessageEntry message = (MessageEntry) space.take(MESSAGE_TEMPLATE(user), Lease.FOREVER);
 					listener.messageReceiver(message.sender, message.content, message.target);
 				}
 			}

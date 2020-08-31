@@ -58,9 +58,12 @@ public class App {
 				window.addMessageToMainList("");
 			}
 
-			public void onJoinRoom(String roomName) {
-				chatService.registerUserInRoom(roomName);
-				enterInChat(roomName);
+			public Boolean onJoinRoom(String roomName) {
+				if (chatService.registerUserInRoom(roomName)) {
+					enterInChat(roomName);
+					return true;
+				}
+				return false;
 			}
 
 			public void onChatWithUser(String userName) {
