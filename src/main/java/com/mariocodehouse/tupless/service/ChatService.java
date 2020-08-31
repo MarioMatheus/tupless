@@ -118,7 +118,6 @@ public class ChatService {
 		chatListen = new Thread(new Runnable() {
 			public void run() {
 				while (true) {
-					System.out.println("Escutando msgs para o " + getCurrentUser());
 					MessageEntry message = (MessageEntry) space.take(MESSAGE_TEMPLATE(getCurrentUser()), Lease.FOREVER);
 					listener.messageReceiver(message.sender, message.content, message.target);
 				}
